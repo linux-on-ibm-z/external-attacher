@@ -61,7 +61,7 @@ TESTARGS =
 endif
 
 ARCH := $(if $(GOARCH),$(GOARCH),$(shell go env GOARCH))
-
+DOCKER_ARCHS ?= amd64 s390x
 # Specific packages can be excluded from each of the tests below by setting the *_FILTER_CMD variables
 # to something like "| grep -v 'github.com/kubernetes-csi/project/pkg/foobar'". See usage below.
 
@@ -71,16 +71,20 @@ build-%: check-go-version-go
 	if [ "$$ARCH" = "amd64" ]; then \
 		CGO_ENABLED=0 GOOS=windows go build $(GOFLAGS_VENDOR) -a -ldflags '-X main.version=$(REV) -extldflags "-static"' -o ./bin/$*.exe ./cmd/$* ; \
 		CGO_ENABLED=0 GOOS=linux GOARCH=ppc64le go build $(GOFLAGS_VENDOR) -a -ldflags '-X main.version=$(REV) -extldflags "-static"' -o ./bin/$*-ppc64le ./cmd/$* ; \
+		CGO_ENABLED=0 GOOS=linux GOARCH=s390x go build $(GOFLAGS_VENDOR) -a -ldflags '-X main.version=$(REV) -extldflags "-static"' -o ./bin/$*-s390x ./cmd/$* ; \
 	fi
 
 container-%: build-%
-	docker build -t $*:latest -f $(shell if [ -e ./cmd/$*/Dockerfile ]; then echo ./cmd/$*/Dockerfile; else echo Dockerfile; fi) --label revision=$(REV) .
+	for arch in $(DOCKER_ARCHS); do \
+	docker build --build-arg ARCH="${arch}" -t $*:latest -f $(shell if [ -e ./cmd/$*/Dockerfile ]; then echo ./cmd/$*/Dockerfile; else echo Dockerfile; fi) --label revision=$(REV) .; \
+	done; \
+	
 
 push-%: container-%
 	set -ex; \
 	push_image () { \
 		docker tag $*:latest $(IMAGE_NAME):$$tag; \
-		docker push $(IMAGE_NAME):$$tag; \
+		#docker push $(IMAGE_NAME):$$tag; \
 	}; \
 	for tag in $(IMAGE_TAGS); do \
 		if [ "$$tag" = "canary" ] || echo "$$tag" | grep -q -e '-canary$$'; then \
