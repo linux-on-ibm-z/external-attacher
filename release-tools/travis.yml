@@ -14,7 +14,6 @@ before_script:
 - export PATH=$PWD/bin:$PATH
 script:
 - make -k all test GOFLAGS_VENDOR=$( [ -d vendor ] && echo '-mod=vendor' )
-- docker run --rm --privileged multiarch/qemu-user-static:register --reset
 after_success:
   - if [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then
       make push GOFLAGS_VENDOR=$( [ -d vendor ] && echo '-mod=vendor' );
