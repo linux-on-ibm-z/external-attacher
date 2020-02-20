@@ -80,7 +80,7 @@ push-%: container-%
 	set -ex; \
 	push_image () { \
 		docker tag $*:latest $(IMAGE_NAME):$$tag; \
-		docker push $(IMAGE_NAME):$$tag; \
+		#docker push $(IMAGE_NAME):$$tag; \
 	}; \
 	for tag in $(IMAGE_TAGS); do \
 		if [ "$$tag" = "canary" ] || echo "$$tag" | grep -q -e '-canary$$'; then \
