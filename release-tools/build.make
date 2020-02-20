@@ -74,7 +74,8 @@ build-%: check-go-version-go
 	fi
 
 container-%: build-%
-        docker run --rm --privileged multiarch/qemu-user-static:register --reset
+
+	docker run --rm --privileged multiarch/qemu-user-static:register --reset
 	docker build -t $*:latest -f $(shell if [ -e ./cmd/$*/Dockerfile ]; then echo ./cmd/$*/Dockerfile; else echo Dockerfile; fi) --label revision=$(REV) .
 
 push-%: container-%
