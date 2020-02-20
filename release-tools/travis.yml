@@ -14,7 +14,9 @@ before_script:
 - chmod u+x bin/dep
 - export PATH=$PWD/bin:$PATH
 script:
+- echo $ARCH
 - make -k all test GOFLAGS_VENDOR=$( [ -d vendor ] && echo '-mod=vendor' )
+- make build && file ./bin/csi-attacher
 - make push GOFLAGS_VENDOR=$( [ -d vendor ] && echo '-mod=vendor' )
 after_success:
   - if [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then
