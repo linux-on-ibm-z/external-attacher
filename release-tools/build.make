@@ -50,8 +50,12 @@ IMAGE_TAGS+=$(shell git branch -r --points-at=HEAD | grep 'origin/release-' | gr
 # --abbrev=0 suppresses long format, only showing the closest tag.
 IMAGE_TAGS+=$(shell tagged="$$(git describe --tags --match='v*' --abbrev=0)"; if [ "$$tagged" ] && [ "$$(git rev-list -n1 HEAD)" = "$$(git rev-list -n1 $$tagged)" ]; then echo $$tagged; fi)
 
-# Images are named after the command contained in them.
-IMAGE_NAME=$(REGISTRY_NAME)/$*
+# Images are named after the command contained in them with system arch.
+ifeq ($(shell go env GOARCH), amd64)
+	IMAGE_NAME=$(REGISTRY_NAME)/$*
+else ifeq ($(shell go env GOARCH), s390x)
+	IMAGE_NAME=$(REGISTRY_NAME)/$*-s390x
+endif
 
 ifdef V
 # Adding "-alsologtostderr" assumes that all test binaries contain glog. This is not guaranteed.
@@ -172,6 +176,9 @@ test-subtree:
 TEST_SHELLCHECK_DIRS=release-tools
 .PHONY: test-shellcheck
 test: test-shellcheck
+ifeq ($(shell go env GOARCH), amd64)
+	test: test-shellcheck
+endif
 test-shellcheck:
 	@ echo; echo "### $@:"
 	@ ret=0; \
