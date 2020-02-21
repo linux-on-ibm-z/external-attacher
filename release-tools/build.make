@@ -176,8 +176,9 @@ test-subtree:
 TEST_SHELLCHECK_DIRS=release-tools
 .PHONY: test-shellcheck
 if [ "$$ARCH" = "amd64" ]; then \
-		test: test-shellcheck ; \
-fi; \
+	test: test-shellcheck ; \
+fi
+
 test-shellcheck:
 	@ echo; echo "### $@:"
 	@ ret=0; \
