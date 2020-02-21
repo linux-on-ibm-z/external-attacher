@@ -175,9 +175,9 @@ test-subtree:
 # The default is to check only the release-tools directory itself.
 TEST_SHELLCHECK_DIRS=release-tools
 .PHONY: test-shellcheck
-if [ "$$ARCH" = "amd64" ]; then \
-		test: test-shellcheck ; \
-fi
+ifeq ($ARCH, amd64)
+	test: test-shellcheck
+endif
 
 test-shellcheck:
 	@ echo; echo "### $@:"
