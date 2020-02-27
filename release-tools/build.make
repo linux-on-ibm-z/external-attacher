@@ -68,9 +68,10 @@ ARCH := $(if $(GOARCH),$(GOARCH),$(shell go env GOARCH))
 build-%: check-go-version-go
 	mkdir -p bin
 	CGO_ENABLED=0 GOOS=linux go build $(GOFLAGS_VENDOR) -a -ldflags '-X main.version=$(REV) -extldflags "-static"' -o ./bin/$* ./cmd/$*
-	if [ "$$ARCH" = "amd64" ]; then \
+	if [ "$(ARCH)" = "amd64" ]; then \
 		CGO_ENABLED=0 GOOS=windows go build $(GOFLAGS_VENDOR) -a -ldflags '-X main.version=$(REV) -extldflags "-static"' -o ./bin/$*.exe ./cmd/$* ; \
 		CGO_ENABLED=0 GOOS=linux GOARCH=ppc64le go build $(GOFLAGS_VENDOR) -a -ldflags '-X main.version=$(REV) -extldflags "-static"' -o ./bin/$*-ppc64le ./cmd/$* ; \
+		CGO_ENABLED=0 GOOS=linux GOARCH=s390x go build $(GOFLAGS_VENDOR) -a -ldflags '-X main.version=$(REV) -extldflags "-static"' -o ./bin/$*-s390x ./cmd/$* ; \
 	fi
 
 container-%: build-%
@@ -80,7 +81,7 @@ push-%: container-%
 	set -ex; \
 	push_image () { \
 		docker tag $*:latest $(IMAGE_NAME):$$tag; \
-		docker push $(IMAGE_NAME):$$tag; \
+		#docker push $(IMAGE_NAME):$$tag; \
 	}; \
 	for tag in $(IMAGE_TAGS); do \
 		if [ "$$tag" = "canary" ] || echo "$$tag" | grep -q -e '-canary$$'; then \
@@ -170,7 +171,9 @@ test-subtree:
 # The default is to check only the release-tools directory itself.
 TEST_SHELLCHECK_DIRS=release-tools
 .PHONY: test-shellcheck
-test: test-shellcheck
+ifeq ($ARCH, amd64)
+	test: test-shellcheck
+endif
 test-shellcheck:
 	@ echo; echo "### $@:"
 	@ ret=0; \
